@@ -8,11 +8,6 @@ http_server::http_server(boost::asio::io_service & io_svc,
 	start_accept();
 }
 
-http_server::~http_server()
-{
-	
-}
-
 void http_server::start_accept()
 {
     tcp_connection::pointer new_connection =

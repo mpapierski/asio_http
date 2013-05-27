@@ -29,9 +29,7 @@ public:
 private:
 	tcp_connection(boost::asio::io_service& io_service);
 	void handle_write(const boost::system::error_code& /*error*/,
-					  size_t /*bytes_transferred*/)
-	{
-	}
+					  size_t /*bytes_transferred*/);
 	boost::asio::ip::tcp::socket socket_;
 	/*
 	 * HTTP stuff
@@ -51,6 +49,10 @@ private:
 	 * Received HTTP header.
 	 */
 	void handler(const boost::system::error_code& e, std::size_t size);
+	/**
+	 * Send HTTP response.
+	 */
+	void send_response(std::string message);
 };
 
 #endif /* ASIO_HTTP_HTTP_SERVER_CONNECTION_H_INCLUDED_ */

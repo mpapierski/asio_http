@@ -20,7 +20,6 @@ private:
 public:
 	http_server(boost::asio::io_service & io_svc,
 				boost::asio::ip::tcp::endpoint endpoint_);
-	~http_server();
 	/**
 	 * Start asynchronous accept.
 	 */
