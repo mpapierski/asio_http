@@ -1,0 +1,11 @@
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+PROJECT (http_server)
+
+FIND_PACKAGE (Boost COMPONENTS
+	system)
+INCLUDE_DIRECTORIES (${Boost_INCLUDE_DIRS})
+ADD_EXECUTABLE (http_server
+	main.cpp)
+TARGET_LINK_LIBRARIES (http_server
+	${Boost_LIBRARIES}
+	asio_http)

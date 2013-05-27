@@ -13,5 +13,6 @@ SET (asio_http_server_SOURCES
 ADD_LIBRARY (asio_http
 	${asio_http_server_SOURCES})
 
+ADD_SUBDIRECTORY (examples)
 ENABLE_TESTING ()
 ADD_SUBDIRECTORY (tests)

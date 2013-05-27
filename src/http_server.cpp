@@ -5,7 +5,7 @@ http_server::http_server(boost::asio::io_service & io_svc,
 	: io_svc_(io_svc)
 	, acceptor_(io_svc_, endpoint_)
 {
-	
+	start_accept();
 }
 
 http_server::~http_server()
