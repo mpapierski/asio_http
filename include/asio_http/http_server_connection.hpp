@@ -1,6 +1,7 @@
 #if !defined(ASIO_HTTP_HTTP_SERVER_CONNECTION_H_INCLUDED_)
 #define ASIO_HTTP_HTTP_SERVER_CONNECTION_H_INCLUDED_
 
+#include <string>
 #include <boost/asio.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
@@ -36,8 +37,19 @@ private:
 	 * HTTP stuff
 	 */
 	boost::shared_ptr<http_parser> parser_;
+	/**
+	 * HTTP parser encountered something that appears to be URL.
+	 * This callback might be called multiple times, but in our
+	 * case this gets called just once.
+	 */
 	static int on_url(http_parser* parser, const char *at, size_t length);
+	/**
+	 * Temporary socket data is stored here.
+	 */
 	boost::asio::streambuf buffer_;
+	/**
+	 * Received HTTP header.
+	 */
 	void handler(const boost::system::error_code& e, std::size_t size);
 };
 
