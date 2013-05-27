@@ -27,7 +27,7 @@ void http_server::handle_accept(tcp_connection::pointer new_connection,
 {
     if (!error)
     {
-		//new_connection->start();
+		new_connection->start();
 		start_accept();
     }
 }
