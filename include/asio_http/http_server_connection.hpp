@@ -24,6 +24,7 @@ public:
 		return socket_;
 	}
 	void start();
+	http_parser_settings settings_;
 private:
 	tcp_connection(boost::asio::io_service& io_service);
 	void handle_write(const boost::system::error_code& /*error*/,
@@ -36,9 +37,7 @@ private:
 	 */
 	boost::shared_ptr<http_parser> parser_;
 	static int on_url(http_parser* parser, const char *at, size_t length);
-	
-	// Test purposes only!
-	char buffer_[512 * 1024];
+	boost::asio::streambuf buffer_;
 	void handler(const boost::system::error_code& e, std::size_t size);
 };
 

@@ -3,36 +3,6 @@
 // Test
 #include <iostream>
 
-struct http_request_match
-{
-	tcp_connection * conn_;
-	http_parser * parser_;
-	http_request_match(tcp_connection * conn, http_parser * parser)
-		: conn_(conn)
-		, parser_(parser)
-	{
-	}
-	template <typename Iterator>
-	std::pair<Iterator, bool>
-	operator()(Iterator begin, Iterator end)
-	{
-		// Test code (match first whitespace)
-		Iterator i = begin;
-		while (i != end)
-		{
-			if (std::isspace(*i++))
-				return std::make_pair(i, true);
-		}
-		return std::make_pair(i, false);
-	}
-};
-
-namespace boost{
-namespace asio {
-	template <> struct is_match_condition<http_request_match>
-    : public boost::true_type {};
-} // namespace asio
-}
 tcp_connection::tcp_connection(boost::asio::io_service& io_service)
 	: socket_(io_service)
 	, parser_(boost::make_shared<http_parser>())
@@ -40,16 +10,17 @@ tcp_connection::tcp_connection(boost::asio::io_service& io_service)
 	// Initialize parser
 	http_parser_init(parser_.get(), HTTP_REQUEST);
 	parser_->data = this;
-	http_parser_settings settings;
-	settings.on_url = &tcp_connection::on_url;
+	
+	settings_.on_url = &tcp_connection::on_url;
 }
 
 void tcp_connection::start()
 {
 	// Start reading
-	boost::asio::streambuf sb;
-	boost::asio::async_read_until(socket_, sb, http_request_match(this, parser_.get()),
-		boost::bind(&tcp_connection::handler,
+
+	//boost::asio::async_read_until(socket_, buf, http_request_match(this, parser_.get()),
+	boost::asio::async_read_until(socket_, buffer_, "\r\n\r\n",
+	  boost::bind(&tcp_connection::handler,
 			shared_from_this(),
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred));
@@ -57,11 +28,33 @@ void tcp_connection::start()
 
 int tcp_connection::on_url(http_parser* parser, const char *at, size_t length)
 {
-	std::cout << "on_url" << std::endl;
-	return 1;
+	std::vector<char> url(at, at + length + 1);
+	url[length] = '\0';
+	std::cout << "URL: " << url.data() << std::endl;
+	return 0;
 }
 
-void tcp_connection::handler(const boost::system::error_code& e, std::size_t size)
+void tcp_connection::handler(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
-	std::cout << "handler" << std::endl;
+	if (!error && bytes_transferred)
+	{
+		std::istream is(&buffer_);
+		std::vector<char> vec(bytes_transferred, '\0');
+		is.read(vec.data(), vec.size());
+		std::size_t nsize = http_parser_execute(parser_.get(), &settings_, vec.data(), bytes_transferred);
+		if (nsize != bytes_transferred)
+		{
+			std::cout << "http parser execute fail " << nsize << "/" << bytes_transferred << std::endl;
+			socket_.close();
+			return;
+		}
+		// Not sure if http_parser should be told about eof.
+		// There is no \r\n\r\n in the stream (or is it?)
+		std::size_t eof = http_parser_execute(parser_.get(), &settings_, vec.data(), 0);
+		assert(eof == 0 && "Unable to reach EOF");
+	}
+	else
+	{
+		socket_.close();
+	}
 }
