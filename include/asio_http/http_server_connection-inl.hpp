@@ -25,7 +25,7 @@ template <typename SocketType>
 void basic_http_connection<SocketType>::start()
 {
 	boost::asio::async_read(socket_, buffer_, boost::asio::transfer_at_least(64),
-	  boost::bind(&basic_http_connection<SocketType>::handler,
+		boost::bind(&basic_http_connection<SocketType>::handler,
 			this->shared_from_this(),
 			boost::asio::placeholders::error,
 			boost::asio::placeholders::bytes_transferred));
@@ -113,10 +113,16 @@ void basic_http_connection<SocketType>::handler(const boost::system::error_code&
 }
 
 template <typename SocketType>
-void basic_http_connection<SocketType>::handle_write(const boost::system::error_code& /*error*/,
+void basic_http_connection<SocketType>::handle_write(const boost::system::error_code& error,
 	size_t /*bytes_transferred*/)
 {
-	
+	if (error)
+	{
+		std::cerr << "Unable to handle request: " << error.message() << " [Errno " << error.value() << "]" << std::endl;
+		return;
+	}
+	std::cout << "Response sent" << std::endl;
+	start();
 }
 
 template <typename SocketType>
@@ -125,11 +131,13 @@ void basic_http_connection<SocketType>::send_response(std::string message)
 	std::ostream o(&outgoing_buffer_);
 	o << "HTTP/1.1 200 OK\r\n"
 		<< "Content-Length: " << message.length() << "\r\n";
-	if (http_should_keep_alive(&parser_))
+	if (http_should_keep_alive(&parser_) == 1)
 	{
 		o << "Connection: keep-alive\r\n";
 	}
-	boost::asio::async_write(socket_, boost::asio::buffer(message),
+	o << "\r\n";
+	o << message;
+	boost::asio::async_write(socket_, outgoing_buffer_,
 		boost::bind(&basic_http_connection<SocketType>::handle_write, this->shared_from_this(),
 					boost::asio::placeholders::error,
 					boost::asio::placeholders::bytes_transferred));
