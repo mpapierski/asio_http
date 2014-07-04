@@ -123,10 +123,10 @@ void basic_http_connection<SocketType>::handler(const boost::system::error_code&
 	{
 		const char * data = boost::asio::buffer_cast<const char *>(buffer_.data());
 		std::size_t nsize = http_parser_execute(&parser_, &settings_, data, bytes_transferred);
-		std::cout << "nsize = " << nsize << std::endl;
+		// std::cout << "nsize = " << nsize << std::endl;
 		if (nsize != bytes_transferred)
 		{
-			std::cout << "http parser execute fail " << nsize << "/" << bytes_transferred << std::endl;
+			// std::cout << "http parser execute fail " << nsize << "/" << bytes_transferred << std::endl;
 			socket_.close();
 			return;
 		}
@@ -144,10 +144,10 @@ void basic_http_connection<SocketType>::handle_write(const boost::system::error_
 {
 	if (error)
 	{
-		std::cerr << "Unable to handle request: " << error.message() << " [Errno " << error.value() << "]" << std::endl;
+		// std::cerr << "Unable to handle request: " << error.message() << " [Errno " << error.value() << "]" << std::endl;
 		return;
 	}
-	std::cout << "Response sent" << std::endl;
+	// std::cout << "Response sent" << std::endl;
 	start();
 }
 
