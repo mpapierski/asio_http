@@ -6,6 +6,7 @@ template <typename SocketType>
 basic_http_connection<SocketType>::basic_http_connection(boost::asio::io_service& io_service)
 	: socket_(io_service)
 	, parser_()
+	, header_state_(HEADER_START)
 {
 	// Initialize parser
 	http_parser_init(&parser_, HTTP_REQUEST);
@@ -48,18 +49,48 @@ template <typename SocketType>
 int basic_http_connection<SocketType>::on_header_field(http_parser * parser, const char * at, size_t length)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	if (conn->header_state_ == HEADER_START)
+	{
+		conn->header_field_.append(at, at + length);
+	}
+	else if (conn->header_state_ == HEADER_VALUE)
+	{
+		conn->headers_.insert(std::make_pair(conn->header_field_, conn->header_value_));
+		conn->header_field_.clear();
+		conn->header_value_.clear();
+		conn->header_field_.append(at, at + length);
+	}
+	else if (conn->header_state_ == HEADER_FIELD)
+	{
+		conn->header_field_.append(at, at + length);
+	}
+	conn->header_state_ = HEADER_FIELD;
 	return 0;
 }
 template <typename SocketType>
 int basic_http_connection<SocketType>::on_header_value(http_parser * parser, const char * at, size_t length)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	if (conn->header_state_ == HEADER_FIELD)
+	{
+		conn->header_value_.clear();
+		conn->header_value_.append(at, at + length);
+	}
+	else if (conn->header_state_ == HEADER_VALUE)
+	{
+		conn->header_value_.append(at, at + length);
+	}
+	conn->header_state_ = HEADER_VALUE;
 	return 0;
 }
 template <typename SocketType>
 int basic_http_connection<SocketType>::on_headers_complete(http_parser * parser)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	if (conn->header_state_ == HEADER_VALUE)
+	{
+		conn->headers_.insert(std::make_pair(conn->header_field_, conn->header_value_));
+	}
 	return 0;
 }
 template <typename SocketType>
@@ -81,7 +112,6 @@ template <typename SocketType>
 int basic_http_connection<SocketType>::on_message_complete(http_parser * parser)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
-	std::cout << "message complete" << std::endl;
 	SocketType()(conn->shared_from_this());
 	return 0;
 }

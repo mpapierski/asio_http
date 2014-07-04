@@ -10,6 +10,11 @@ struct http_request_handler
 	{
 		std::cout << "Request handler" << std::endl;
 		ptr->send_response("Hello: " + ptr->get_request_url() + "\n");
+		for (connection::headers_type::const_iterator it = ptr->get_headers().begin(), end = ptr->get_headers().end();
+			it != end; ++it)
+		{
+			std::cout << "[" << it->first << "]=[" << it->second << "]" << std::endl;
+		}
 	}
 };
 

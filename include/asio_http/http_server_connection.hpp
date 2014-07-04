@@ -35,6 +35,11 @@ public:
 	{
 		return request_url_;
 	}
+	typedef std::multimap<std::string, std::string> headers_type;
+	const headers_type & get_headers() const
+	{
+		return headers_;
+	}
 private:
 	basic_http_connection(boost::asio::io_service& io_service);
 	void handle_write(const boost::system::error_code& /*error*/,
@@ -76,6 +81,16 @@ private:
 	 * Full URL of the current request 
 	 */
 	std::string request_url_;
+	enum
+	{
+		HEADER_START,
+		HEADER_FIELD,
+		HEADER_VALUE
+	};
+	int header_state_;
+	std::string header_field_;
+	std::string header_value_;
+	headers_type headers_;
 };
 
 #include "http_server_connection-inl.hpp"
