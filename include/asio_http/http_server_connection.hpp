@@ -27,6 +27,10 @@ public:
 	}
 	void start();
 	http_parser_settings settings_;
+	/**
+	 * Send HTTP response.
+	 */
+	void send_response(std::string message);
 private:
 	basic_http_connection(boost::asio::io_service& io_service);
 	void handle_write(const boost::system::error_code& /*error*/,
@@ -57,13 +61,13 @@ private:
 	 */
 	boost::asio::streambuf buffer_;
 	/**
+	 * Temporary buffer for static responses
+	 */
+	boost::asio::streambuf outgoing_buffer_;
+	/**
 	 * Received HTTP header.
 	 */
 	void handler(const boost::system::error_code& e, std::size_t size);
-	/**
-	 * Send HTTP response.
-	 */
-	void send_response(std::string message);
 	/**
 	 * Full URL of the current request 
 	 */

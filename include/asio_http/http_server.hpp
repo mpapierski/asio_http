@@ -20,7 +20,7 @@ private:
 	boost::asio::ip::tcp::acceptor acceptor_;
 	RequestHandler request_handler_;
 public:
-	typedef basic_http_connection<boost::asio::ip::tcp::socket> connection_type;
+	typedef basic_http_connection<RequestHandler> connection_type;
 	http_server(boost::asio::io_service & io_svc,
 				boost::asio::ip::tcp::endpoint endpoint_);
 	/**
@@ -32,6 +32,7 @@ public:
 	 */
 	void handle_accept(typename connection_type::pointer new_connection,
 					   const boost::system::error_code& error);
+	void handle_request(typename connection_type::pointer connection);
 };
 
 #include "http_server-inl.hpp"

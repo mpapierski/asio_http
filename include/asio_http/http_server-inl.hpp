@@ -14,7 +14,7 @@ http_server<RequestHandler>::http_server(boost::asio::io_service & io_svc,
 template <typename RequestHandler>
 void http_server<RequestHandler>::start_accept()
 {
-    connection_type::pointer new_connection =
+    typename connection_type::pointer new_connection =
 		connection_type::create(io_svc_);
 	acceptor_.async_accept(new_connection->socket(),
 		boost::bind(&http_server<RequestHandler>::handle_accept, this, new_connection,
@@ -22,7 +22,7 @@ void http_server<RequestHandler>::start_accept()
 }
 
 template <typename RequestHandler>
-void http_server<RequestHandler>::handle_accept(connection_type::pointer new_connection,
+void http_server<RequestHandler>::handle_accept(typename connection_type::pointer new_connection,
 	const boost::system::error_code& error)
 {
     if (!error)
@@ -30,4 +30,10 @@ void http_server<RequestHandler>::handle_accept(connection_type::pointer new_con
 		new_connection->start();
 		start_accept();
     }
+}
+
+template <typename RequestHandler>
+void http_server<RequestHandler>::handle_request(typename connection_type::pointer connection)
+{
+
 }
