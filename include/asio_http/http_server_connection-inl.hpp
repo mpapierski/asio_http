@@ -12,15 +12,19 @@ basic_http_connection<SocketType>::basic_http_connection(boost::asio::io_service
 	parser_.data = this;
 	std::memset(&settings_, 0, sizeof(settings_));
 	settings_.on_url = &basic_http_connection::on_url;
+	settings_.on_message_begin = &basic_http_connection::on_message_begin;
+	settings_.on_status_complete = &basic_http_connection::on_status_complete;
+	settings_.on_header_field = &basic_http_connection::on_header_field;
+	settings_.on_header_value = &basic_http_connection::on_header_value;
+	settings_.on_headers_complete = &basic_http_connection::on_headers_complete;
+	settings_.on_body = &basic_http_connection::on_body;
 	settings_.on_message_complete = &basic_http_connection::on_message_complete;
 }
 
 template <typename SocketType>
 void basic_http_connection<SocketType>::start()
 {
-	// Read chunk
-	auto buf = buffer_.prepare(8);
-	socket_.async_read_some(buf,
+	boost::asio::async_read(socket_, buffer_, boost::asio::transfer_at_least(64),
 	  boost::bind(&basic_http_connection<SocketType>::handler,
 			this->shared_from_this(),
 			boost::asio::placeholders::error,
@@ -28,11 +32,48 @@ void basic_http_connection<SocketType>::start()
 }
 
 template <typename SocketType>
+int basic_http_connection<SocketType>::on_message_begin(http_parser * parser)
+{
+	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	std::cout << "complete" << std::endl;
+	return 0;
+}
+template <typename SocketType>
+int basic_http_connection<SocketType>::on_status_complete(http_parser * parser)
+{
+	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	return 0;
+}
+template <typename SocketType>
+int basic_http_connection<SocketType>::on_header_field(http_parser * parser, const char * at, size_t length)
+{
+	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	return 0;
+}
+template <typename SocketType>
+int basic_http_connection<SocketType>::on_header_value(http_parser * parser, const char * at, size_t length)
+{
+	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	return 0;
+}
+template <typename SocketType>
+int basic_http_connection<SocketType>::on_headers_complete(http_parser * parser)
+{
+	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	return 0;
+}
+template <typename SocketType>
+int basic_http_connection<SocketType>::on_body(http_parser * parser, const char * at, size_t length)
+{
+	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	return 0;
+}
+
+template <typename SocketType>
 int basic_http_connection<SocketType>::on_url(http_parser* parser, const char *at, size_t length)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
-	std::string url(at, at + length);
-	std::cout << "url=" << url << std::endl;
+	conn->request_url_.append(at, at + length);
 	return 0;
 }
 
@@ -41,7 +82,7 @@ int basic_http_connection<SocketType>::on_message_complete(http_parser * parser)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
 	std::cout << "message complete" << std::endl;
-	return 1;
+	return 0;
 }
 
 template <typename SocketType>
@@ -52,9 +93,8 @@ void basic_http_connection<SocketType>::handler(const boost::system::error_code&
 	if (!error && bytes_transferred)
 	{
 		const char * data = boost::asio::buffer_cast<const char *>(buffer_.data());
-
 		std::size_t nsize = http_parser_execute(&parser_, &settings_, data, bytes_transferred);
-		assert(nsize == bytes_transferred);
+		std::cout << "nsize = " << nsize << std::endl;
 		if (nsize != bytes_transferred)
 		{
 			std::cout << "http parser execute fail " << nsize << "/" << bytes_transferred << std::endl;

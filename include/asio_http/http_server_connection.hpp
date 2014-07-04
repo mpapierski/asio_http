@@ -36,6 +36,12 @@ private:
 	 * HTTP stuff
 	 */
 	http_parser parser_;
+	static int on_message_begin(http_parser * parser);
+	static int on_status_complete(http_parser * parser);
+	static int on_header_field(http_parser * parser, const char * at, size_t length);
+	static int on_header_value(http_parser * parser, const char * at, size_t length);
+  	static int on_headers_complete(http_parser * parser);
+  	static int on_body(http_parser * parser, const char * at, size_t length);
 	/**
 	 * HTTP parser encountered something that appears to be URL.
 	 * This callback might be called multiple times, but in our
@@ -58,6 +64,10 @@ private:
 	 * Send HTTP response.
 	 */
 	void send_response(std::string message);
+	/**
+	 * Full URL of the current request 
+	 */
+	std::string request_url_;
 };
 
 #include "http_server_connection-inl.hpp"
