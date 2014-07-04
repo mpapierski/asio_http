@@ -5,8 +5,9 @@ using namespace boost::asio::ip;
 
 struct http_request_handler
 {
-	void operator()()
+	void operator()(http_connection::pointer ptr)
 	{
+		std::cout << "Request handler" << std::endl;
 	}
 };
 
@@ -15,7 +16,7 @@ main(int argc, char * argv[])
 {
 	boost::asio::io_service io_svc;
 	http_server<http_request_handler> server(io_svc,
-		tcp::endpoint(tcp::v4(), 8080));
+		tcp::endpoint(tcp::v4(), 5000));
 	io_svc.run();
 	return 0;
 }

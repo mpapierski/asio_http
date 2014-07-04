@@ -5,20 +5,22 @@
 template <typename SocketType>
 basic_http_connection<SocketType>::basic_http_connection(boost::asio::io_service& io_service)
 	: socket_(io_service)
-	, parser_(boost::make_shared<http_parser>())
+	, parser_()
 {
 	// Initialize parser
-	http_parser_init(parser_.get(), HTTP_REQUEST);
-	parser_->data = this;
+	http_parser_init(&parser_, HTTP_REQUEST);
+	parser_.data = this;
 	std::memset(&settings_, 0, sizeof(settings_));
 	settings_.on_url = &basic_http_connection::on_url;
+	settings_.on_message_complete = &basic_http_connection::on_message_complete;
 }
 
 template <typename SocketType>
 void basic_http_connection<SocketType>::start()
 {
-	// Read whole HTTP request
-	boost::asio::async_read_until(socket_, buffer_, "\r\n\r\n",
+	// Read chunk
+	auto buf = buffer_.prepare(8);
+	socket_.async_read_some(buf,
 	  boost::bind(&basic_http_connection<SocketType>::handler,
 			this->shared_from_this(),
 			boost::asio::placeholders::error,
@@ -29,32 +31,41 @@ template <typename SocketType>
 int basic_http_connection<SocketType>::on_url(http_parser* parser, const char *at, size_t length)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
-	//std::vector<char> url(at, at + length + 1);
-	//url[length] = '\0';
-	//std::cout << "URL: " << url.data() << std::endl;
+	std::string url(at, at + length);
+	std::cout << "url=" << url << std::endl;
 	return 0;
+}
+
+template <typename SocketType>
+int basic_http_connection<SocketType>::on_message_complete(http_parser * parser)
+{
+	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	std::cout << "message complete" << std::endl;
+	return 1;
 }
 
 template <typename SocketType>
 void basic_http_connection<SocketType>::handler(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
-	if (!error && bytes_transferred && this->shared_from_this())
+	std::cout << "bytes bytes_transferred = " << bytes_transferred << std::endl;
+	
+	if (!error && bytes_transferred)
 	{
-		std::istream is(&buffer_);
-		std::vector<char> vec(bytes_transferred, '\0');
-		is.read(vec.data(), vec.size());
-		std::size_t nsize = http_parser_execute(parser_.get(), &settings_, vec.data(), bytes_transferred);
+		const char * data = boost::asio::buffer_cast<const char *>(buffer_.data());
+
+		std::size_t nsize = http_parser_execute(&parser_, &settings_, data, bytes_transferred);
+		assert(nsize == bytes_transferred);
 		if (nsize != bytes_transferred)
 		{
 			std::cout << "http parser execute fail " << nsize << "/" << bytes_transferred << std::endl;
 			socket_.close();
 			return;
 		}
-		// Not sure if http_parser should be told about eof.
-		// There is no \r\n\r\n in the stream (or is it?)
-		std::size_t eof = http_parser_execute(parser_.get(), &settings_, vec.data(), 0);
-		assert(eof == 0 && "Unable to reach EOF");
-		this->send_response("hello world");
+		buffer_.consume(nsize);
+		int is_final = http_body_is_final(&parser_);
+		int is_keep_alive = http_should_keep_alive(&parser_);
+		std::cout << "consumed " << nsize << " bytes" <<std::endl;
+		start();
 	}
 	else
 	{

@@ -35,13 +35,17 @@ private:
 	/*
 	 * HTTP stuff
 	 */
-	boost::shared_ptr<http_parser> parser_;
+	http_parser parser_;
 	/**
 	 * HTTP parser encountered something that appears to be URL.
 	 * This callback might be called multiple times, but in our
 	 * case this gets called just once.
 	 */
 	static int on_url(http_parser* parser, const char *at, size_t length);
+	/**
+	 * Received complete HTTP request
+	 */
+	static int on_message_complete(http_parser * parser);
 	/**
 	 * Temporary socket data is stored here.
 	 */
