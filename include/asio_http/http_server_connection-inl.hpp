@@ -89,8 +89,6 @@ int basic_http_connection<SocketType>::on_message_complete(http_parser * parser)
 template <typename SocketType>
 void basic_http_connection<SocketType>::handler(const boost::system::error_code& error, std::size_t bytes_transferred)
 {
-	std::cout << "bytes bytes_transferred = " << bytes_transferred << std::endl;
-	
 	if (!error && bytes_transferred)
 	{
 		const char * data = boost::asio::buffer_cast<const char *>(buffer_.data());
@@ -103,9 +101,6 @@ void basic_http_connection<SocketType>::handler(const boost::system::error_code&
 			return;
 		}
 		buffer_.consume(nsize);
-		int is_final = http_body_is_final(&parser_);
-		int is_keep_alive = http_should_keep_alive(&parser_);
-		std::cout << "consumed " << nsize << " bytes" <<std::endl;
 	}
 	else
 	{
