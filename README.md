@@ -1,4 +1,4 @@
-Boost.Asio + http-parser from Joyent = fun.
+Boost.Asio + http-parser from Joyent = fun. [![Build Status](https://travis-ci.org/mpapierski/asio_http.svg?branch=master)](https://travis-ci.org/mpapierski/asio_http)
 
 ===
 
