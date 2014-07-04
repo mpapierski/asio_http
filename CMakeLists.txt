@@ -7,9 +7,7 @@ INCLUDE_DIRECTORIES (
 	${Boost_INCLUDE_DIRS})
 
 SET (asio_http_server_SOURCES
-	src/http_parser.c
-	src/http_server.cpp
-	src/http_server_connection.cpp)
+	src/http_parser.c)
 ADD_LIBRARY (asio_http
 	${asio_http_server_SOURCES})
 

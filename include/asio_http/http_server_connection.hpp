@@ -9,15 +9,16 @@
 #include <boost/bind.hpp>
 #include "http_parser.h"
 
-class tcp_connection
-	: public boost::enable_shared_from_this<tcp_connection>
+template <typename SocketType>
+class basic_http_connection
+	: public boost::enable_shared_from_this<basic_http_connection<SocketType> >
 {
 public:
-	typedef boost::shared_ptr<tcp_connection> pointer;
+	typedef boost::shared_ptr<basic_http_connection<SocketType> > pointer;
 
 	static pointer create(boost::asio::io_service& io_service)
 	{
-		return pointer(new tcp_connection(io_service));
+		return pointer(new basic_http_connection(io_service));
 	}
 
 	boost::asio::ip::tcp::socket& socket()
@@ -27,9 +28,9 @@ public:
 	void start();
 	http_parser_settings settings_;
 private:
-	tcp_connection(boost::asio::io_service& io_service);
+	basic_http_connection(boost::asio::io_service& io_service);
 	void handle_write(const boost::system::error_code& /*error*/,
-					  size_t /*bytes_transferred*/);
+		size_t /*bytes_transferred*/);
 	boost::asio::ip::tcp::socket socket_;
 	/*
 	 * HTTP stuff
@@ -54,5 +55,9 @@ private:
 	 */
 	void send_response(std::string message);
 };
+
+#include "http_server_connection-inl.hpp"
+
+typedef basic_http_connection<boost::asio::ip::tcp::socket> http_connection;
 
 #endif /* ASIO_HTTP_HTTP_SERVER_CONNECTION_H_INCLUDED_ */

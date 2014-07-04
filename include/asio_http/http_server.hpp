@@ -8,6 +8,7 @@
 /**
  * HTTP server implementation
  */
+template <typename RequestHandler>
 class http_server
 {
 private:
@@ -17,7 +18,9 @@ private:
 	 */
 
 	boost::asio::ip::tcp::acceptor acceptor_;
+	RequestHandler request_handler_;
 public:
+	typedef basic_http_connection<boost::asio::ip::tcp::socket> connection_type;
 	http_server(boost::asio::io_service & io_svc,
 				boost::asio::ip::tcp::endpoint endpoint_);
 	/**
@@ -27,8 +30,10 @@ public:
 	/**
 	 * New client connected
 	 */
-	void handle_accept(tcp_connection::pointer new_connection,
+	void handle_accept(typename connection_type::pointer new_connection,
 					   const boost::system::error_code& error);
 };
+
+#include "http_server-inl.hpp"
 
 #endif /* ASIO_HTTP_HTTP_SERVER_INCLUDED_H_ */
