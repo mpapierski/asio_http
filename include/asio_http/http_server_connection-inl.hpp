@@ -14,7 +14,6 @@ basic_http_connection<SocketType>::basic_http_connection(boost::asio::io_service
 	std::memset(&settings_, 0, sizeof(settings_));
 	settings_.on_url = &basic_http_connection::on_url;
 	settings_.on_message_begin = &basic_http_connection::on_message_begin;
-	settings_.on_status_complete = &basic_http_connection::on_status_complete;
 	settings_.on_header_field = &basic_http_connection::on_header_field;
 	settings_.on_header_value = &basic_http_connection::on_header_value;
 	settings_.on_headers_complete = &basic_http_connection::on_headers_complete;
@@ -39,12 +38,7 @@ int basic_http_connection<SocketType>::on_message_begin(http_parser * parser)
 	conn->request_url_.clear();
 	return 0;
 }
-template <typename SocketType>
-int basic_http_connection<SocketType>::on_status_complete(http_parser * parser)
-{
-	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
-	return 0;
-}
+
 template <typename SocketType>
 int basic_http_connection<SocketType>::on_header_field(http_parser * parser, const char * at, size_t length)
 {
