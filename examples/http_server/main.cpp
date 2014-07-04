@@ -1,3 +1,4 @@
+#include <iostream>
 #include <boost/asio.hpp>
 #include <asio_http/http_server.hpp>
 
