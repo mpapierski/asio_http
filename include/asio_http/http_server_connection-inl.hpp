@@ -35,6 +35,7 @@ template <typename SocketType>
 int basic_http_connection<SocketType>::on_message_begin(http_parser * parser)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	conn->request_url_.clear();
 	return 0;
 }
 template <typename SocketType>

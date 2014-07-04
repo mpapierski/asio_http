@@ -9,7 +9,7 @@ struct http_request_handler
 	void operator()(connection::pointer ptr)
 	{
 		std::cout << "Request handler" << std::endl;
-		ptr->send_response("Hello world!");
+		ptr->send_response("Hello: " + ptr->get_request_url() + "\n");
 	}
 };
 

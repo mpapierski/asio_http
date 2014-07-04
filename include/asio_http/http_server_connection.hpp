@@ -31,6 +31,10 @@ public:
 	 * Send HTTP response.
 	 */
 	void send_response(std::string message);
+	inline const std::string & get_request_url() const
+	{
+		return request_url_;
+	}
 private:
 	basic_http_connection(boost::asio::io_service& io_service);
 	void handle_write(const boost::system::error_code& /*error*/,
