@@ -22,9 +22,15 @@ basic_http_connection<SocketType>::basic_http_connection(boost::asio::io_service
 }
 
 template <typename SocketType>
+basic_http_connection<SocketType>::~basic_http_connection()
+{
+	std::cout << "basic_http_connection" << std::endl;
+}
+
+template <typename SocketType>
 void basic_http_connection<SocketType>::start()
 {
-	boost::asio::async_read(socket_, buffer_, boost::asio::transfer_at_least(64),
+	boost::asio::async_read(socket_, buffer_, boost::asio::transfer_at_least(8),
 		boost::bind(&basic_http_connection<SocketType>::handler,
 			this->shared_from_this(),
 			boost::asio::placeholders::error,
@@ -117,10 +123,10 @@ void basic_http_connection<SocketType>::handler(const boost::system::error_code&
 	{
 		const char * data = boost::asio::buffer_cast<const char *>(buffer_.data());
 		std::size_t nsize = http_parser_execute(&parser_, &settings_, data, bytes_transferred);
-		// std::cout << "nsize = " << nsize << std::endl;
+		std::cout << "read nsize = " << nsize << std::endl;
 		if (nsize != bytes_transferred)
 		{
-			// std::cout << "http parser execute fail " << nsize << "/" << bytes_transferred << std::endl;
+			std::cout << "http parser execute fail " << nsize << "/" << bytes_transferred << std::endl;
 			socket_.close();
 			return;
 		}

@@ -28,6 +28,10 @@ public:
 	 */
 	void start_accept();
 	/**
+	 * Stop accepting new connections
+	 */
+	void stop_accept();
+	/**
 	 * New client connected
 	 */
 	void handle_accept(typename connection_type::pointer new_connection,

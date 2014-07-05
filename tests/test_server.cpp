@@ -19,12 +19,13 @@ struct http_request_handler
 	typedef basic_http_connection<http_request_handler> connection;
 	void operator()(connection::pointer ptr)
 	{
+		std::cout << "Request URL: " << ptr->get_request_url() << std::endl;
 		if (ptr->get_request_url() == "/get")
 		{
 			std::cout << "Request handler" << std::endl;
 			Json::Value result;
 			result["url"] = ptr->get_request_url();
-			Json::Value headers;
+			Json::Value headers(Json::objectValue);
 			std::ostringstream oss;
 			for (connection::headers_type::const_iterator it = ptr->get_headers().begin(), end = ptr->get_headers().end();
 				it != end; ++it)
@@ -68,26 +69,31 @@ struct client_body_handler
 		: str_(str)
 	{
 	}
-	int operator()(const boost::system::error_code & ec, boost::asio::const_buffer buffer)
+	void operator()(const boost::system::error_code & ec, const boost::asio::const_buffer & buffer)
 	{
 		const char * data = boost::asio::buffer_cast<const char *>(buffer);
 		std::size_t size = boost::asio::buffer_size(buffer);
-		str_.append(data, data + size);
-		return size;
+		std::string chunk(data, data + size);
+		std::cout << "chunk[" << chunk << "]" << std::endl;
+		str_ += chunk;
 	}
 };
 
 struct client_done_handler
 {
 	typedef void result_type;
+	F::server_type & server_;
 	boost::system::error_code & ec_;
-	client_done_handler(boost::system::error_code & ec)
-		: ec_(ec)
+	client_done_handler(F::server_type & server, boost::system::error_code & ec)
+		: server_(server)
+		, ec_(ec)
 	{
 	}
 	void operator()(const boost::system::error_code & ec)
 	{
+		std::cout << "done handler " << ec.message() << std::endl;
 		ec_ = ec;
+		server_.stop_accept();
 	}
 };
 
@@ -103,11 +109,14 @@ BOOST_AUTO_TEST_CASE( test_get1 )
 	std::string data;
 	boost::system::error_code ec;
 	client_body_handler body(data);
-	client_done_handler done(ec);
-
+	client_done_handler done(server, ec);
 	client_connection::pointer connection = client.create_request(base_url + "/get", body, done);
 	connection->start();
 	io_service.run();
+	Json::Reader reader;
+	Json::Value json_data;
+	BOOST_REQUIRE(reader.parse(data, json_data));
+	BOOST_REQUIRE_EQUAL("/get", json_data["url"].asString());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -41,8 +41,10 @@ public:
 	{
 		return headers_;
 	}
+	~basic_http_connection();
 private:
 	basic_http_connection(boost::asio::io_service& io_service);
+	
 	void handle_write(const boost::system::error_code& /*error*/,
 		size_t /*bytes_transferred*/);
 	boost::asio::ip::tcp::socket socket_;
