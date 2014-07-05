@@ -59,7 +59,8 @@ void http_client_connection<Protocol, BodyHandler, DoneHandler>::resolve_handler
 		return;
 	}
 	assert(i != boost::asio::ip::tcp::resolver::iterator());
-	socket_.async_connect(*i,
+	boost::asio::ip::tcp::endpoint ep = *i;
+	socket_.async_connect(ep,
 		boost::bind(&http_client_connection::connect_handler, this->shared_from_this(),
 			boost::asio::placeholders::error,
 			++i));
@@ -89,7 +90,8 @@ void http_client_connection<Protocol, BodyHandler, DoneHandler>::connect_handler
 	{
 		std::cout << "Trying to connect to " << i->endpoint() << std::endl;
 		socket_.close();
-		socket_.async_connect(*i,
+		boost::asio::ip::tcp::endpoint ep = *i;
+		socket_.async_connect(ep,
 			boost::bind(&http_client_connection::connect_handler, this->shared_from_this(),
 				boost::asio::placeholders::error,
 				++i));
