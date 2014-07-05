@@ -33,6 +33,10 @@ public:
 	void handle_accept(typename connection_type::pointer new_connection,
 					   const boost::system::error_code& error);
 	void handle_request(typename connection_type::pointer connection);
+	inline boost::asio::ip::tcp::acceptor & get_acceptor()
+	{
+		return acceptor_;
+	}
 };
 
 #include "http_server-inl.hpp"
