@@ -8,6 +8,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
 #include "http_parser.h"
+#include "detail/status_codes.hpp"
 
 template <typename SocketType>
 class basic_http_connection
@@ -30,7 +31,7 @@ public:
 	/**
 	 * Send HTTP response.
 	 */
-	void send_response(std::string message);
+	void send_response(int status_code, std::string message);
 	inline const std::string & get_request_url() const
 	{
 		return request_url_;

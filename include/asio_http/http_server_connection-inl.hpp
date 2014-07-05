@@ -146,10 +146,24 @@ void basic_http_connection<SocketType>::handle_write(const boost::system::error_
 }
 
 template <typename SocketType>
-void basic_http_connection<SocketType>::send_response(std::string message)
+void basic_http_connection<SocketType>::send_response(int status_code, std::string message)
 {
+	std::string status_text;
+#define HTTP_STATUS_CODE(code, descr, type) \
+		case (code): \
+			status_text = (descr); \
+			break;
+	switch (status_code)
+	{
+		HTTP_STATUS_CODE_MAP(HTTP_STATUS_CODE)
+		default:
+			status_text = "UNKNOWN";
+			break;
+	}
+#undef HTTP_STATUS_CODE
+
 	std::ostream o(&outgoing_buffer_);
-	o << "HTTP/1.1 200 OK\r\n"
+	o << "HTTP/1.1 " << status_code << " " << status_text << "\r\n"
 		<< "Content-Length: " << message.length() << "\r\n";
 	if (http_should_keep_alive(&parser_) == 1)
 	{

@@ -17,7 +17,7 @@ struct http_request_handler
 		{
 			oss << "[" << it->first << "]=[" << it->second << "]" << std::endl;
 		}
-		ptr->send_response(oss.str());
+		ptr->send_response(200, oss.str());
 	}
 };
 
