@@ -23,6 +23,7 @@ http_client_connection<Protocol, BodyHandler, DoneHandler>::http_client_connecti
 	parser_.data = this;
 	settings_.on_body = &http_client_connection::on_body;
 	settings_.on_message_complete = &http_client_connection::on_message_complete;
+	settings_.on_status = &http_client_connection::on_status;
 }
 
 template <typename Protocol, typename BodyHandler, typename DoneHandler>
@@ -170,5 +171,14 @@ int http_client_connection<Protocol, BodyHandler, DoneHandler>::on_message_compl
 	http_client_connection * obj = static_cast<http_client_connection *>(parser->data);
 	obj->io_service_.post(boost::bind(obj->done_handler_, boost::system::error_code()));
 	obj->socket_.close();
+	return 0;
+}
+
+template <typename Protocol, typename BodyHandler, typename DoneHandler>
+int http_client_connection<Protocol, BodyHandler, DoneHandler>::on_status(http_parser * parser, const char * at, size_t length)
+{
+	assert(parser->data);
+	http_client_connection * obj = static_cast<http_client_connection *>(parser->data);
+	obj->status_.append(at, length);
 	return 0;
 }

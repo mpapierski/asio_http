@@ -117,6 +117,8 @@ BOOST_AUTO_TEST_CASE( test_get1 )
 	Json::Value json_data;
 	BOOST_REQUIRE(reader.parse(data, json_data));
 	BOOST_REQUIRE_EQUAL("/get", json_data["url"].asString());
+	BOOST_REQUIRE_EQUAL(200, connection->get_status_code());
+	BOOST_REQUIRE_EQUAL("OK", connection->get_status());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

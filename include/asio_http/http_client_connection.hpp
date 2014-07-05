@@ -31,6 +31,7 @@ struct http_client_connection
 		std::size_t bytes_transferred);
 	static int on_body(http_parser * parser, const char * at, size_t length);
 	static int on_message_complete(http_parser * parser);
+	static int on_status(http_parser * parser, const char * at, size_t length);
 	boost::asio::io_service & io_service_;
 	boost::asio::ip::tcp::resolver resolver_;
 	T socket_;
@@ -42,6 +43,21 @@ struct http_client_connection
 	boost::asio::streambuf response_buffer_;
 	http_parser_settings settings_;
 	http_parser parser_;
+	/** 
+	 * Status string. For example "OK"
+	 */
+	std::string status_;
+	inline
+	unsigned int get_status_code() const
+	{
+		assert(parser_.type == HTTP_RESPONSE);
+		return parser_.status_code;
+	}
+	inline
+	const std::string & get_status() const
+	{
+		return status_;
+	}
 };
 
 #include "http_client_connection-inl.hpp"
