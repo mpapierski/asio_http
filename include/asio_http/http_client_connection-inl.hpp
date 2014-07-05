@@ -58,11 +58,11 @@ void http_client_connection<Protocol, BodyHandler, DoneHandler>::resolve_handler
 		io_service_.post(boost::bind(done_handler_, ec));
 		return;
 	}
-	boost::asio::async_connect(socket_, i,
-		connect_condition(),
+	assert(i != boost::asio::ip::tcp::resolver::iterator());
+	socket_.async_connect(*i,
 		boost::bind(&http_client_connection::connect_handler, this->shared_from_this(),
 			boost::asio::placeholders::error,
-			boost::asio::placeholders::iterator));
+			++i));
 }
 
 template <typename Protocol, typename BodyHandler, typename DoneHandler>
@@ -70,25 +70,34 @@ void http_client_connection<Protocol, BodyHandler, DoneHandler>::connect_handler
 	const boost::system::error_code& ec,
 	boost::asio::ip::tcp::resolver::iterator i)
 {
-	if (ec)
+	if (!ec)
 	{
 		// An error occurred.
-		io_service_.post(boost::bind(done_handler_, ec));
+		std::cout << "connected to " << socket_.local_endpoint() << std::endl;
+		std::string path = url_.substr(
+			parsed_url_.field_data[UF_PATH].off,
+			url_.size());
+		std::ostream o(&request_buffer_);
+		o << "GET " << path << " HTTP/1.1\r\n\r\n";
+		boost::asio::async_write(socket_, request_buffer_,
+			boost::bind(&http_client_connection::write_handler, this->shared_from_this(),
+				boost::asio::placeholders::error,
+				boost::asio::placeholders::bytes_transferred));
 		return;
 	}
-	std::cout << "connected to " << i->endpoint() << std::endl;
-
-	std::string path = url_.substr(
-		parsed_url_.field_data[UF_PATH].off,
-		url_.size());
-	//std::cout << "path[" << path << "]" << std::endl;
-
-	std::ostream o(&request_buffer_);
-	o << "GET " << path << " HTTP/1.1\r\n\r\n";
-	boost::asio::async_write(socket_, request_buffer_,
-		boost::bind(&http_client_connection::write_handler, this->shared_from_this(),
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::bytes_transferred));
+	else if (i != boost::asio::ip::tcp::resolver::iterator())
+	{
+		std::cout << "Trying to connect to " << i->endpoint() << std::endl;
+		socket_.close();
+		socket_.async_connect(*i,
+			boost::bind(&http_client_connection::connect_handler, this->shared_from_this(),
+				boost::asio::placeholders::error,
+				++i));
+	}
+	else
+	{
+		io_service_.post(boost::bind(done_handler_, ec));
+	}
 }
 
 template <typename Protocol, typename BodyHandler, typename DoneHandler>

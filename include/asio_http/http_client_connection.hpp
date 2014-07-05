@@ -22,18 +22,6 @@ struct http_client_connection
 	void start();
 	void resolve_handler(const boost::system::error_code& ec,
 		boost::asio::ip::tcp::resolver::iterator i);
-	struct connect_condition
-	{
-		template <typename Iterator>
-		Iterator operator()(
-			const boost::system::error_code& ec,
-			Iterator next)
-		{
-			if (ec) std::cout << "Error: " << ec.message() << std::endl;
-			std::cout << "Trying: " << next->endpoint() << std::endl;
-			return next;
-		}
-	}; 
 	void connect_handler(const boost::system::error_code& ec,
 		boost::asio::ip::tcp::resolver::iterator i);
 	void start_read();
