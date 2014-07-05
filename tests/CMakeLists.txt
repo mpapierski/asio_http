@@ -1,6 +1,7 @@
 CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 PROJECT (tests)
 
+FIND_PACKAGE (Threads)
 FIND_PACKAGE (Boost REQUIRED COMPONENTS
 	system
 	thread)
@@ -12,7 +13,8 @@ ADD_EXECUTABLE (test_server
 	jsoncpp.cpp)
 TARGET_LINK_LIBRARIES (test_server
 	asio_http
-	${Boost_LIBRARIES})
+	${Boost_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT})
 #ADD_EXECUTABLE (http_parser_test
 #	test.c)
 #TARGET_LINK_LIBRARIES (http_parser_test
