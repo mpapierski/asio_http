@@ -22,7 +22,7 @@ public:
 		return pointer(new basic_http_connection(io_service));
 	}
 
-	boost::asio::ip::tcp::socket& socket()
+	boost::asio::ip::tcp::socket& get_socket()
 	{
 		return socket_;
 	}

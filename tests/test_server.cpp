@@ -33,6 +33,7 @@ struct http_request_handler
 				headers[it->first] = it->second;
 			}
 			result["headers"] = headers;
+			result["origin"] = boost::lexical_cast<std::string>(ptr->get_socket().local_endpoint().address());
 			ptr->send_response(200, result.toStyledString());
 			return;
 		}
@@ -117,6 +118,7 @@ BOOST_AUTO_TEST_CASE( test_get1 )
 	Json::Value json_data;
 	BOOST_REQUIRE(reader.parse(data, json_data));
 	BOOST_REQUIRE_EQUAL("/get", json_data["url"].asString());
+	BOOST_REQUIRE_EQUAL("127.0.0.1", json_data["origin"].asString());
 	BOOST_REQUIRE_EQUAL(200, connection->get_status_code());
 	BOOST_REQUIRE_EQUAL("OK", connection->get_status());
 }
