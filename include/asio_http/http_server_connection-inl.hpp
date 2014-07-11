@@ -30,7 +30,7 @@ basic_http_connection<SocketType>::~basic_http_connection()
 template <typename SocketType>
 void basic_http_connection<SocketType>::start()
 {
-	boost::asio::async_read(socket_, buffer_, boost::asio::transfer_at_least(8),
+	socket_.async_read_some(buffer_.prepare(8),
 		boost::bind(&basic_http_connection<SocketType>::handler,
 			this->shared_from_this(),
 			boost::asio::placeholders::error,
@@ -113,6 +113,9 @@ int basic_http_connection<SocketType>::on_message_complete(http_parser * parser)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
 	SocketType()(conn->shared_from_this());
+	// Re-initialize parser
+	http_parser_init(&conn->parser_, HTTP_REQUEST);
+	conn->parser_.data = conn;
 	return 0;
 }
 
@@ -131,6 +134,7 @@ void basic_http_connection<SocketType>::handler(const boost::system::error_code&
 			return;
 		}
 		buffer_.consume(nsize);
+		start();
 	}
 	else
 	{
@@ -144,11 +148,10 @@ void basic_http_connection<SocketType>::handle_write(const boost::system::error_
 {
 	if (error)
 	{
-		// std::cerr << "Unable to handle request: " << error.message() << " [Errno " << error.value() << "]" << std::endl;
+		std::cerr << "Unable to handle request: " << error.message() << " [Errno " << error.value() << "]" << std::endl;
 		return;
 	}
-	// std::cout << "Response sent" << std::endl;
-	start();
+	std::cout << "Response sent" << std::endl;
 }
 
 template <typename SocketType>
