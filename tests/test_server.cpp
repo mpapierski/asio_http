@@ -3,6 +3,8 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/array.hpp>
+#include <boost/thread.hpp>
 #include <asio_http/http_server.hpp>
 #include <asio_http/http_client.hpp>
 #include "json/json.h"
@@ -121,6 +123,68 @@ BOOST_AUTO_TEST_CASE( test_get1 )
 	BOOST_REQUIRE_EQUAL("127.0.0.1", json_data["origin"].asString());
 	BOOST_REQUIRE_EQUAL(200, connection->get_status_code());
 	BOOST_REQUIRE_EQUAL("OK", connection->get_status());
+}
+
+struct scoped_thread
+{
+	boost::thread & thread_;
+	scoped_thread(boost::thread & thread)
+		: thread_(thread)
+	{
+	}
+	~scoped_thread()
+	{
+		thread_.join();
+	}
+};
+
+BOOST_AUTO_TEST_CASE( test_multiple_get_requests )
+{
+	// Checks if server cleans up properly internal structures
+	// after two correct requests were processed.
+	std::ostringstream data;
+	data << "GET /get HTTP/1.1\r\n";
+	data << "Header1: Value1\r\n";
+	data << "Host: " << server.get_acceptor().local_endpoint() << "\r\n";
+	data << "Accept: */*\r\n";
+	data << "Referer: \r\n\r\n";
+	
+	data << "GET /get HTTP/1.1\r\n";
+	data << "Header2: Value2\r\n";
+	data << "Host: " << server.get_acceptor().local_endpoint() << "\r\n";
+	data << "Accept: */*\r\n";
+	data << "Referer: \r\n\r\n";
+
+	boost::thread th(boost::bind(&boost::asio::io_service::run, &io_service));
+
+	boost::asio::ip::tcp::socket client(io_service);
+	client.connect(server.get_acceptor().local_endpoint());
+	std::size_t bytes_written = boost::asio::write(client, boost::asio::buffer(data.str()));
+	std::cout << "sent " << bytes_written << std::endl;
+	BOOST_REQUIRE_EQUAL(bytes_written, data.str().size());
+	std::vector<Json::Value> values;
+	for (int i = 1; i <= 2; ++i)
+	{
+		boost::asio::streambuf response_buffer;
+		std::size_t received_bytes = boost::asio::read_until(client, response_buffer, std::string("}"));
+		const char * ptr = boost::asio::buffer_cast<const char *>(response_buffer.data());
+		std::string response1(ptr, ptr + received_bytes);
+		std::string json_str = response1.substr(response1.find_first_of('{'));
+		json_str += "}";
+		Json::Reader reader;
+		Json::Value value;
+		BOOST_REQUIRE(reader.parse(json_str, value));
+		values.push_back(value);
+	}
+	io_service.stop();
+	th.join();
+	BOOST_REQUIRE(values[0]["headers"].isMember("Header1"));
+	BOOST_REQUIRE(!values[0]["headers"].isMember("Header2"));
+	BOOST_REQUIRE_EQUAL("Value1", values[0]["headers"]["Header1"].asString());
+
+	BOOST_REQUIRE(values[1]["headers"].isMember("Header2"));
+	BOOST_REQUIRE(!values[1]["headers"].isMember("Header1"));
+	BOOST_REQUIRE_EQUAL("Value2", values[1]["headers"]["Header2"].asString());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
