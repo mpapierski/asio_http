@@ -3,8 +3,10 @@
 #endif
 
 template <typename SocketType>
-basic_http_connection<SocketType>::basic_http_connection(boost::asio::io_service& io_service)
-	: socket_(io_service)
+basic_http_connection<SocketType>::basic_http_connection(boost::asio::io_service& io_service,
+		SocketType * handler)
+	: handler_(handler)
+	, socket_(io_service)
 	, parser_()
 	, header_state_(HEADER_START)
 {
@@ -113,10 +115,8 @@ template <typename SocketType>
 int basic_http_connection<SocketType>::on_message_complete(http_parser * parser)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
-	SocketType()(conn->shared_from_this());
-	// Re-initialize parser
-	http_parser_init(&conn->parser_, HTTP_REQUEST);
-	conn->parser_.data = conn;
+	conn->socket_.get_io_service().post(
+		boost::bind(&basic_http_connection::process_request, conn->shared_from_this()));
 	return 0;
 }
 
@@ -185,4 +185,13 @@ void basic_http_connection<SocketType>::send_response(int status_code, std::stri
 		boost::bind(&basic_http_connection<SocketType>::handle_write, this->shared_from_this(),
 					boost::asio::placeholders::error,
 					boost::asio::placeholders::bytes_transferred));
+}
+
+template <typename SocketType>
+void basic_http_connection<SocketType>::process_request()
+{
+	(*handler_)(this->shared_from_this());
+	// Re-initialize parser
+	http_parser_init(&parser_, HTTP_REQUEST);
+	parser_.data = this;
 }

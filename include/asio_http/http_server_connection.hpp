@@ -17,9 +17,9 @@ class basic_http_connection
 public:
 	typedef boost::shared_ptr<basic_http_connection<SocketType> > pointer;
 
-	static pointer create(boost::asio::io_service& io_service)
+	static pointer create(boost::asio::io_service& io_service, SocketType * handler)
 	{
-		return pointer(new basic_http_connection(io_service));
+		return pointer(new basic_http_connection(io_service, handler));
 	}
 
 	boost::asio::ip::tcp::socket& get_socket()
@@ -43,7 +43,9 @@ public:
 	}
 	~basic_http_connection();
 private:
-	basic_http_connection(boost::asio::io_service& io_service);
+	SocketType * handler_;
+	basic_http_connection(boost::asio::io_service& io_service,
+		SocketType * handler);
 	
 	void handle_write(const boost::system::error_code& /*error*/,
 		size_t /*bytes_transferred*/);
@@ -79,6 +81,10 @@ private:
 	 * Received HTTP header.
 	 */
 	void handler(const boost::system::error_code& e, std::size_t size);
+	/**
+	 * Executes request handler after successful request
+	 */
+	void process_request();
 	/**
 	 * Full URL of the current request 
 	 */
