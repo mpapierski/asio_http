@@ -22,7 +22,8 @@ private:
 public:
 	typedef basic_http_connection<RequestHandler> connection_type;
 	http_server(boost::asio::io_service & io_svc,
-				boost::asio::ip::tcp::endpoint endpoint_);
+				boost::asio::ip::tcp::endpoint endpoint_,
+				RequestHandler request_handler = RequestHandler());
 	/**
 	 * Start asynchronous accept.
 	 */

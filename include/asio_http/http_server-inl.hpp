@@ -4,9 +4,11 @@
 
 template <typename RequestHandler>
 http_server<RequestHandler>::http_server(boost::asio::io_service & io_svc,
-		boost::asio::ip::tcp::endpoint endpoint_)
+		boost::asio::ip::tcp::endpoint endpoint_,
+		RequestHandler handler)
 	: io_svc_(io_svc)
 	, acceptor_(io_svc_, endpoint_)
+	, request_handler_(handler)
 {
 	start_accept();
 }
