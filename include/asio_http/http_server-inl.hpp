@@ -33,12 +33,16 @@ template <typename RequestHandler>
 void http_server<RequestHandler>::handle_accept(typename connection_type::pointer new_connection,
 	const boost::system::error_code& error)
 {
-	std::cout << "new server connection: " << error.message() << std::endl;
-    if (!error)
-    {
-		new_connection->start();
-		start_accept();
-    }
+	if (error)
+	{
+		HTTP_SERVER_DEBUG_OUTPUT("Failed to accept new server connection: %s [Errno %d]",
+			error.message().c_str(),
+			error.value());
+		return;
+	}
+	new_connection->start();
+	start_accept();
+	return;
 }
 
 template <typename RequestHandler>

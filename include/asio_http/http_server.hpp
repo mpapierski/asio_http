@@ -4,6 +4,7 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <asio_http/http_server_connection.hpp>
+#include <asio_http/aux/logging.hpp>
 
 /**
  * HTTP server implementation

@@ -26,7 +26,7 @@ basic_http_connection<SocketType>::basic_http_connection(boost::asio::io_service
 template <typename SocketType>
 basic_http_connection<SocketType>::~basic_http_connection()
 {
-	std::cout << "basic_http_connection" << std::endl;
+	HTTP_SERVER_DEBUG_OUTPUT("~basic_http_connection\n");
 }
 
 template <typename SocketType>
@@ -127,10 +127,9 @@ void basic_http_connection<SocketType>::handler(const boost::system::error_code&
 	{
 		const char * data = boost::asio::buffer_cast<const char *>(buffer_.data());
 		std::size_t nsize = http_parser_execute(&parser_, &settings_, data, bytes_transferred);
-		std::cout << "read nsize = " << nsize << std::endl;
 		if (nsize != bytes_transferred)
 		{
-			std::cout << "http parser execute fail " << nsize << "/" << bytes_transferred << std::endl;
+			HTTP_SERVER_DEBUG_OUTPUT("http parser execute fail %lu/%lu\n", nsize, bytes_transferred);
 			socket_.close();
 			return;
 		}
@@ -145,14 +144,16 @@ void basic_http_connection<SocketType>::handler(const boost::system::error_code&
 
 template <typename SocketType>
 void basic_http_connection<SocketType>::handle_write(const boost::system::error_code& error,
-	size_t /*bytes_transferred*/)
+	size_t bytes_transferred)
 {
 	if (error)
 	{
-		std::cerr << "Unable to handle request: " << error.message() << " [Errno " << error.value() << "]" << std::endl;
+		HTTP_SERVER_DEBUG_OUTPUT("Unable to handle request: %s [Errno %d]\n",
+			error.message().c_str(),
+			error.value());
 		return;
 	}
-	std::cout << "Response sent" << std::endl;
+	HTTP_SERVER_DEBUG_OUTPUT("Response sent with %lu bytes\n", bytes_transferred);
 }
 
 template <typename SocketType>

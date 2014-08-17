@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/bind.hpp>
+#include <asio_http/aux/logging.hpp>
 #include "http_parser.h"
 #include "detail/status_codes.hpp"
 
