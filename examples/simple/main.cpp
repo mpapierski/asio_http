@@ -7,17 +7,9 @@ using namespace boost::asio::ip;
 struct http_request_handler
 {
 	typedef basic_http_connection<http_request_handler> connection;
-	void operator()(connection::pointer ptr)
+	void operator()(const connection::pointer & ptr)
 	{
-		std::cout << "Request handler" << std::endl;
-		std::ostringstream oss;
-		oss << ptr->get_request_url() << '\n';
-		for (connection::headers_type::const_iterator it = ptr->get_headers().begin(), end = ptr->get_headers().end();
-			it != end; ++it)
-		{
-			oss << "[" << it->first << "]=[" << it->second << "]" << std::endl;
-		}
-		ptr->send_response(200, oss.str());
+		ptr->send_response(200, "Hello world!");
 	}
 };
 
