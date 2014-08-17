@@ -8,6 +8,11 @@ SET (asio_http_server_SOURCES
 	src/http_parser.c)
 ADD_LIBRARY (asio_http
 	${asio_http_server_SOURCES})
+INSTALL (DIRECTORY include/ DESTINATION include)
+INSTALL (TARGETS asio_http
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
 
 ADD_SUBDIRECTORY (examples)
 ENABLE_TESTING ()

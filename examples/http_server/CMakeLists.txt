@@ -11,9 +11,3 @@ TARGET_LINK_LIBRARIES (http_server
 	${Boost_LIBRARIES}
 	asio_http)
 
-install(DIRECTORY include/ DESTINATION include)
-install(TARGETS asio_http
-  RUNTIME DESTINATION bin
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-)
