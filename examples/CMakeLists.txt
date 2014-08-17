@@ -1,1 +1,1 @@
-ADD_SUBDIRECTORY (http_server)
+ADD_SUBDIRECTORY (simple)
