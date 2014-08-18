@@ -1,10 +1,13 @@
+#if 0
 #define BOOST_TEST_MODULE example
 #include <boost/test/included/unit_test.hpp>
 #include <iostream>
+#endif
 #include <boost/asio.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/array.hpp>
 #include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 #include <asio_http/http_server.hpp>
 #include <asio_http/http_client.hpp>
 #include "json/json.h"
@@ -16,26 +19,54 @@ using namespace boost::asio::ip;
 	"<h1>Not Found</h1>\n" \
 	"<p>The requested URL was not found on the server.  If you entered the URL manually please check your spelling and try again.</p>\n"
 
+
+#define HTTP_405_TEMPLATE "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n" \
+	"<title>405 Method Not Allowed</title>\n" \
+	"<h1>Method Not Allowed</h1>\n" \
+	"<p>The method is not allowed for the requested URL.</p>\n" \
+
 struct http_request_handler
 {
 	typedef basic_http_connection<http_request_handler> connection;
-	void operator()(connection::pointer ptr)
+	Json::Value get_json_data(const connection::pointer & ptr)
+	{
+		Json::Value result;
+		result["url"] = ptr->get_request_url();
+		Json::Value headers(Json::objectValue);
+		std::ostringstream oss;
+		for (connection::headers_type::const_iterator it = ptr->get_headers().begin(), end = ptr->get_headers().end();
+			it != end; ++it)
+		{
+			headers[it->first] = it->second;
+		}
+		result["headers"] = headers;
+		result["origin"] = boost::lexical_cast<std::string>(ptr->get_socket().local_endpoint().address());
+		return result;
+	}
+	void operator()(const connection::pointer & ptr)
 	{
 		std::cout << "Request URL: " << ptr->get_request_url() << std::endl;
 		if (ptr->get_request_url() == "/get")
 		{
-			std::cout << "Request handler" << std::endl;
-			Json::Value result;
-			result["url"] = ptr->get_request_url();
-			Json::Value headers(Json::objectValue);
-			std::ostringstream oss;
-			for (connection::headers_type::const_iterator it = ptr->get_headers().begin(), end = ptr->get_headers().end();
-				it != end; ++it)
+			if (ptr->get_request_method() != HTTP_GET)
 			{
-				headers[it->first] = it->second;
+				ptr->send_response(405, "Method Not Allowed");
+				return;
 			}
-			result["headers"] = headers;
-			result["origin"] = boost::lexical_cast<std::string>(ptr->get_socket().local_endpoint().address());
+			std::cout << "Request handler" << std::endl;
+			Json::Value result = get_json_data(ptr);
+			ptr->send_response(200, result.toStyledString());
+			return;
+		}
+		if (ptr->get_request_url() == "/post")
+		{
+			if (ptr->get_request_method() != HTTP_POST)
+			{
+				ptr->send_response(405, "Method Not Allowed");
+				return;
+			}
+			Json::Value result = get_json_data(ptr);
+			result["data"] = ptr->get_request_body();
 			ptr->send_response(200, result.toStyledString());
 			return;
 		}
@@ -104,6 +135,35 @@ typedef	http_client_connection<
 	http_client::protocol_type,
 	client_body_handler,
 	client_done_handler> client_connection;
+
+int
+main(int argc, char * argv[])
+{
+	try
+	{
+		typedef http_server<http_request_handler> server_type;
+		boost::asio::io_service io_service;
+		server_type srv(io_service, tcp::endpoint(tcp::v4(), 0));
+		Json::Value message;
+		message["type"] = "listen";
+		message["data"]["port"] = srv.get_acceptor().local_endpoint().address().to_string();
+		message["data"]["port"] = srv.get_acceptor().local_endpoint().port();
+		std::string json_data = Json::FastWriter().write(message);
+		std::fprintf(stdout, "%s", json_data.c_str());
+		std::fflush(stdout);
+		io_service.run();
+	}
+	catch (std::exception & e)
+	{
+		Json::Value message;
+		message["type"] = "exception";
+		message["data"]["what"] = e.what();
+		std::cout << Json::FastWriter().write(message);
+		return 1;
+	}
+}
+
+#if 0
 
 BOOST_FIXTURE_TEST_SUITE( s, F )
 
@@ -188,3 +248,5 @@ BOOST_AUTO_TEST_CASE( test_multiple_get_requests )
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+#endif

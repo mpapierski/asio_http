@@ -42,6 +42,14 @@ public:
 	{
 		return headers_;
 	}
+	int get_request_method() const
+	{
+		return parser_.method;
+	}
+	const std::string & get_request_body() const
+	{
+		return request_body_;
+	}
 	~basic_http_connection();
 private:
 	SocketType * handler_;
@@ -59,6 +67,7 @@ private:
 	static int on_header_field(http_parser * parser, const char * at, size_t length);
 	static int on_header_value(http_parser * parser, const char * at, size_t length);
   	static int on_headers_complete(http_parser * parser);
+  	std::string request_body_;
   	static int on_body(http_parser * parser, const char * at, size_t length);
 	/**
 	 * HTTP parser encountered something that appears to be URL.

@@ -100,6 +100,7 @@ template <typename SocketType>
 int basic_http_connection<SocketType>::on_body(http_parser * parser, const char * at, size_t length)
 {
 	basic_http_connection * conn = static_cast<basic_http_connection *>(parser->data);
+	conn->request_body_.append(at, at + length);
 	return 0;
 }
 
