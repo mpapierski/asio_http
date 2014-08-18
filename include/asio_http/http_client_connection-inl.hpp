@@ -16,7 +16,7 @@ http_client_connection<Protocol, BodyHandler, DoneHandler>::http_client_connecti
 	, settings_()
 	, parser_()
 {
-	std::cout << url_ << std::endl;
+	HTTP_SERVER_DEBUG_OUTPUT("New connection %s\n", url_.c_str());
 	int result = http_parser_parse_url(url_.c_str(), url_.size(), 0, &parsed_url_);
 	assert(result == 0);
 	http_parser_init(&parser_, HTTP_RESPONSE);

@@ -10,6 +10,7 @@
 #include <boost/lexical_cast.hpp>
 #include <asio_http/http_server.hpp>
 #include <asio_http/http_client.hpp>
+#include <iostream>
 #include "json/json.h"
 
 using namespace boost::asio::ip;
