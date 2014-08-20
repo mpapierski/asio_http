@@ -19,6 +19,15 @@ TARGET_LINK_LIBRARIES (test_server
 	${CMAKE_THREAD_LIBS_INIT})
 ADD_TEST (NAME test_server
 	COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_server.py $<TARGET_FILE:test_server>)
+
+ADD_EXECUTABLE (test_url_parser
+	test_url_parser.cpp)
+TARGET_LINK_LIBRARIES (test_url_parser
+	asio_http
+	${Boost_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT})
+ADD_TEST (NAME test_url_parser
+	COMMAND test_url_parser)
 #ADD_EXECUTABLE (http_parser_test
 #	test.c)
 #TARGET_LINK_LIBRARIES (http_parser_test
