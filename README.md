@@ -1,3 +1,9 @@
+# This project is unmaintained
+
+Please consider using https://github.com/mpapierski/http-server instead.
+
+=== 
+
 Boost.Asio + http-parser from Joyent = fun. [![Build Status](https://travis-ci.org/mpapierski/asio_http.svg?branch=master)](https://travis-ci.org/mpapierski/asio_http)
 
 ===
